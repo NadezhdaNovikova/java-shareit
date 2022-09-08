@@ -1,2 +1,4 @@
 # java-shareit
-Template repository for Shareit project.
+# Сервис по аренде вещей.
+
+ Передай во временное пользование свои вещи, арендуй нужное у других.
