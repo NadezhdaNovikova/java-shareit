@@ -11,7 +11,7 @@ import javax.validation.ConstraintViolationException;
 public class ErrorHandler {
 
     @ExceptionHandler
-    public ResponseEntity<?> exc(ConstraintViolationException ex){
+    public ResponseEntity<?> exc(ConstraintViolationException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
