@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface UserStorage {
 
-    Optional<User> findById(long userId);
+    Optional<User> getById(long userId);
 
     List<User> getAll();
 
@@ -16,4 +16,10 @@ public interface UserStorage {
     User update(User user);
 
     void delete(long userId);
+
+    boolean emailAlreadyExist(String email);
+
+    Long userIdByEmail(String email);
+
+    void deleteEmailUnique(String email);
 }

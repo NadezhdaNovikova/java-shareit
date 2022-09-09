@@ -35,32 +35,39 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto update(User user) {
-        getById(user.getId());
+        User oldUser = userStorage.getById(user.getId()).orElseThrow(() ->
+                new EntityNotFoundException(String.format("Пользователь с id = %s не найден!", user.getId())));
         userValidateAlreadyExistsEmail(user);
-        return UserMapper.toUserDto(userStorage.update(user));
+        if (user.getName() != null && !(user.getName().trim().isBlank())) {
+            oldUser.setName(user.getName());
+        }
+        if (user.getEmail() != null && !(user.getEmail().trim().isBlank())) {
+            userStorage.deleteEmailUnique(oldUser.getEmail());
+            oldUser.setEmail(user.getEmail());
+        }
+        return UserMapper.toUserDto(userStorage.update(oldUser));
     }
 
     @Override
     public void delete(long userId) {
+        String email = getById(userId).getEmail();
         userStorage.delete(userId);
+        userStorage.deleteEmailUnique(email);
     }
 
     @Override
     public UserDto getById(long userId) {
-        return UserMapper.toUserDto(userStorage.findById(userId).orElseThrow(() ->
+        return UserMapper.toUserDto(userStorage.getById(userId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Пользователь с id = %s не найден!", userId))));
     }
 
     private void userValidateAlreadyExistsEmail(User user) {
-        List<User> users = userStorage.getAll();
-        for (User u : users) {
-            Long uId = u.getId();
-            if (!uId.equals(user.getId())) {
-                if (u.getEmail().equals(user.getEmail())) {
-                    log.info("Email принадлежит пользователю " + u);
-                    throw new UserAlreadyExistException(String.format("Пользователь с email %s уже существует",
-                            user.getEmail()));
-                }
+        if (userStorage.emailAlreadyExist(user.getEmail())) {
+            Long emailId = userStorage.userIdByEmail(user.getEmail());
+            if (!emailId.equals(user.getId())) {
+                log.info("Email принадлежит пользователю " + userStorage.getById(emailId));
+                throw new UserAlreadyExistException(String.format("Пользователь с email %s уже существует",
+                        user.getEmail()));
             }
         }
     }

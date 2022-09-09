@@ -17,7 +17,7 @@ import ru.practicum.shareit.Update;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -58,8 +58,8 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> searchItemsByText(@RequestParam("text") String text) {
-        if (text == null || text.isEmpty() || text.isBlank()) {
-            return new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return Collections.emptyList();
         }
         return itemService.searchItemsByText(text);
     }
