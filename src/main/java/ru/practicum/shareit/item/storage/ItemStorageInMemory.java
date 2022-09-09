@@ -2,11 +2,13 @@ package ru.practicum.shareit.item.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,39 +19,30 @@ import java.util.stream.Collectors;
 public class ItemStorageInMemory implements ItemStorage {
 
     private final Map<Long, Item> items = new HashMap<>();
+    private final Map<Long, List<Item>> userItemLists = new LinkedHashMap<>();
     private Long id = 0L;
 
     @Override
     public Item add(User user, Item item) {
+        final List<Item> itemsList = userItemLists.computeIfAbsent(item.getOwner().getId(), k -> new ArrayList<>());
         item.setId(++id);
         item.setOwner(user);
         items.put(item.getId(), item);
+        itemsList.add(item);
+        userItemLists.put(user.getId(), itemsList);
         return item;
     }
 
     @Override
     public Item update(long userId, Item item) {
         Item oldItem = items.get(item.getId());
-        if (oldItem != null) {
-            if (oldItem.getOwner().getId() == userId) {
-                if (item.getName() != null && !(item.getName().trim().isEmpty())) {
-                    oldItem.setName(item.getName());
-                }
-                if (item.getDescription() != null && !(item.getDescription().trim().isEmpty())) {
-                    oldItem.setDescription(item.getDescription());
-                }
-                if (item.getAvailable() != null) {
-                    oldItem.setAvailable(item.getAvailable());
-                }
-                items.put(oldItem.getId(), oldItem);
-                return oldItem;
-            } else {
-                throw new EntityNotFoundException(String.format("Пользователь с id %s не является владельцем " +
-                        "данной вещи!", userId));
-            }
-        } else {
-            throw new EntityNotFoundException("Вещь не найдена!");
-        }
+        final List<Item> itemsList = userItemLists.get(userId);
+        itemsList.remove(oldItem);
+        itemsList.add(item);
+        items.put(item.getId(), item);
+        userItemLists.put(userId, itemsList);
+        return item;
+
     }
 
     @Override
@@ -63,9 +56,10 @@ public class ItemStorageInMemory implements ItemStorage {
 
     @Override
     public List<Item> getAll(long userId) {
-        return items.values().stream()
-                .filter(item -> item.getOwner().getId() == userId)
-                .collect(Collectors.toList());
+        if (userItemLists.containsKey(userId)) {
+            return userItemLists.get(userId);
+        }
+        return Collections.emptyList();
     }
 
     @Override
