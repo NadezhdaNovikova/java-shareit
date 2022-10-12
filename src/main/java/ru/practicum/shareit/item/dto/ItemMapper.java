@@ -18,7 +18,8 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getAvailable()
+                item.getAvailable(),
+                item.getItemRequest() != null ? item.getItemRequest().getId() : null
         );
     }
 
@@ -35,8 +36,7 @@ public class ItemMapper {
 
     public static ItemResponseDto toItemResponseDto(Item item, Booking lastBooking, Booking nextBooking,
                                                     List<CommentDto> comments) {
-        ItemResponseDto itemResponseDto;
-        itemResponseDto = new ItemResponseDto(
+        return new ItemResponseDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
@@ -44,6 +44,5 @@ public class ItemMapper {
                 lastBooking != null ? BookingMapper.toBookingItemDto(lastBooking) : null,
                 nextBooking != null ? BookingMapper.toBookingItemDto(nextBooking) : null,
                 comments);
-        return itemResponseDto;
     }
 }

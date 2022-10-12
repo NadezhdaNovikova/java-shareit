@@ -63,4 +63,7 @@ public interface BookingStorage extends JpaRepository<Booking, Long> {
     @Query("select b from Booking b where b.item.id = ?1 and " +
             "b.item.owner.id = ?2 and b.start >= ?3 order by b.start asc")
     List<Booking> findNextBookingByItemId(long itemId, long userId, LocalDateTime now);
+
+    @Query("select (count(b) > 0) from Booking b where b.item.id = ?1 and b.booker.id = ?2 and b.end < ?3")
+    boolean existsByItemIdAndBookerIdAndEndBefore(long itemId, long userId, LocalDateTime now);
 }

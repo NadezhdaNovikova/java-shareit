@@ -22,7 +22,7 @@ public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id")
+    @Column(name = "comment_id", nullable = false)
     private long id;
 
     @Column(nullable = false)

@@ -9,5 +9,4 @@ import java.util.List;
 public interface CommentStorage extends JpaRepository<Comment, Long> {
     @Query("select c from Comment c where c.item.id = ?1")
     List<Comment> findCommentsByItemId(long itemId);
-
 }

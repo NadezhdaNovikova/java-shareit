@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ItemStorage extends JpaRepository<Item, Long> {
 
-    List<Item> findItemsByOwnerId(long usrId);
+    List<Item> findItemsByOwnerId(long userId);
 
     @Query("select i from Item i " +
             "where i.available = true and (upper(i.name) like upper(concat('%', ?1, '%')) " +

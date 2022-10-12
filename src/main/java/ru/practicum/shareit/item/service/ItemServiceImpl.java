@@ -115,21 +115,15 @@ public class ItemServiceImpl implements ItemService {
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
         if (bookingList.isEmpty()) {
-            return new ItemResponseDto(item.getId(),
-                    item.getName(),
-                    item.getDescription(),
-                    item.getAvailable(),
-                    null,
-                    null,
-                    comments);
+            lastBooking = null;
+            nextBooking = null;
         } else {
             lastBooking = bookingStorage.findLastBookingByItemId(item.getId(), userId, now)
                     .stream().findFirst().orElse(null);
             nextBooking = bookingStorage.findNextBookingByItemId(item.getId(), userId, now)
                     .stream().findFirst().orElse(null);
-            return ItemMapper.toItemResponseDto(item, lastBooking, nextBooking, comments);
         }
-     //   return ItemMapper.toItemResponseDto(item, lastBooking, nextBooking, comments);
+        return ItemMapper.toItemResponseDto(item, lastBooking, nextBooking, comments);
     }
 
     private User checkUser(long userId) {
@@ -160,7 +154,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void checkCommentAuthor(long userId, long itemId) {
-        if (!bookingStorage.findAllByBookerIdAAndItemId(itemId, userId, LocalDateTime.now())) {
+        if (!(bookingStorage.existsByItemIdAndBookerIdAndEndBefore(itemId, userId, LocalDateTime.now()))) {
             throw new ValidationException(
                     String.format("Пользователь id=%d не арендовал вещь id=%d или аренда не завершена!", userId, itemId)
             );
