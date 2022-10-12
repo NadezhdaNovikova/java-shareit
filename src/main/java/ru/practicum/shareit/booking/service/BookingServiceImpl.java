@@ -33,9 +33,9 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Override
     public BookingResponseDto add(long userId, BookingRequestDto bookingRequestDto) {
+        checkBookingDate(bookingRequestDto);
         User booker = checkUser(userId);
         Item item = checkItem(bookingRequestDto.getItemId());
-        checkBookingDate(bookingRequestDto);
         checkItemOwner(userId, item);
         checkItemAvailable(item);
         Booking booking = new Booking(0, bookingRequestDto.getStart(), bookingRequestDto.getEnd(),
@@ -170,7 +170,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void checkBookingDate(BookingRequestDto bookingRequestDto) {
-        if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart())) {
+        if (bookingRequestDto.getStart().isAfter(bookingRequestDto.getEnd())) {
             throw new ValidationException("Дата окончания не может быть раньше даты старта!");
         }
         if (bookingRequestDto.getStart().isBefore(LocalDateTime.now())) {
