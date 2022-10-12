@@ -1,7 +1,6 @@
 package ru.practicum.shareit.exception;
 
-public class BookingStateException extends IllegalStateException{
-
+public class BookingStateException extends IllegalArgumentException {
     public BookingStateException(String message) {
         super(message);
     }

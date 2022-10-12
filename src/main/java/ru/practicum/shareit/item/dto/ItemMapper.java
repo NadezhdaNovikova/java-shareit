@@ -10,7 +10,6 @@ import ru.practicum.shareit.user.model.User;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
@@ -19,8 +18,7 @@ public class ItemMapper {
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
-                item.getAvailable(),
-                item.getItemRequest() != null ? item.getItemRequest().getId() : null
+                item.getAvailable()
         );
     }
 
@@ -37,7 +35,8 @@ public class ItemMapper {
 
     public static ItemResponseDto toItemResponseDto(Item item, Booking lastBooking, Booking nextBooking,
                                                     List<CommentDto> comments) {
-        ItemResponseDto itemResponseDto = new ItemResponseDto(
+        ItemResponseDto itemResponseDto;
+        itemResponseDto = new ItemResponseDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
@@ -46,9 +45,5 @@ public class ItemMapper {
                 nextBooking != null ? BookingMapper.toBookingItemDto(nextBooking) : null,
                 comments);
         return itemResponseDto;
-    }
-
-    public static List<ItemDto> toItemDtoList(List<Item> items) {
-        return items.stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 }

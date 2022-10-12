@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.shareit.Create;
+import ru.practicum.shareit.common.Create;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.exception.BookingStateException;
 
 import java.util.List;
 
@@ -36,30 +38,43 @@ public class BookingController {
     }
 
     @PatchMapping("{bookingId}")
-    public BookingResponseDto  update(@RequestHeader("X-Sharer-User-Id") long userId,
+    public BookingResponseDto  approve(@RequestHeader("X-Sharer-User-Id") long userId,
                              @PathVariable long bookingId,
                              @RequestParam("approved") boolean isApproved) {
-        BookingResponseDto bookingResponseDto = bookingService.approvedBooking(userId, bookingId, isApproved);
+        BookingResponseDto bookingResponseDto = bookingService.approve(userId, bookingId, isApproved);
         log.info("Был обновлен статус запроса с id {}", bookingResponseDto.getId());
         return bookingResponseDto;
     }
 
     @GetMapping("{bookingId}")
-    public BookingResponseDto  findBooking(@RequestHeader("X-Sharer-User-Id") long userId,
+    public BookingResponseDto  getById(@RequestHeader("X-Sharer-User-Id") long userId,
                                   @PathVariable long bookingId) {
-        return bookingService.findBooking(userId, bookingId);
+        return bookingService.getById(userId, bookingId);
     }
 
     @GetMapping
-    public List<BookingResponseDto> findBookingByBookerId(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                  @RequestParam(value = "state", defaultValue = "ALL") String state) {
-        return bookingService.findBookingByBookerId(userId, state);
+    public List<BookingResponseDto> getByUser(@RequestHeader("X-Sharer-User-Id") long userId,
+                                                  @RequestParam(value = "state",
+                                                          defaultValue = "ALL") String state) {
+        BookingState stateIn;
+        try {
+            stateIn = BookingState.valueOf(state);
+        } catch (IllegalArgumentException e) {
+            throw new BookingStateException(state);
+        }
+        return bookingService.getByUser(userId, stateIn);
     }
 
     @GetMapping("/owner")
-    public List<BookingResponseDto> findBookingByItemsOwnerId(@RequestHeader("X-Sharer-User-Id") long userId,
+    public List<BookingResponseDto> getByOwner(@RequestHeader("X-Sharer-User-Id") long userId,
                                                       @RequestParam(value = "state", defaultValue = "ALL")
                                                       String state) {
-        return bookingService.findBookingsByItemsOwnerId(userId, state);
+        BookingState stateIn;
+        try {
+            stateIn = BookingState.valueOf(state);
+        } catch (IllegalArgumentException e) {
+            throw new BookingStateException(state);
+        }
+        return bookingService.getByOwner(userId, stateIn);
     }
 }

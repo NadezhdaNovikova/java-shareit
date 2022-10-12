@@ -5,13 +5,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingStorage;
-import ru.practicum.shareit.exception.BookingStateException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.CommentStorage;
@@ -20,7 +20,9 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,14 +37,15 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto add(long userId, ItemDto itemDto) {
         User user = checkUser(userId);
+        checkItemDto(itemDto);
         return ItemMapper.toItemDto(itemStorage.save(ItemMapper.toItem(itemDto, user, null)));
     }
 
+    @Transactional
     @Override
     public ItemDto update(long userId, ItemDto itemDto) {
         checkUser(userId);
-        Item oldItem = itemStorage.findById(itemDto.getId()).orElseThrow(() ->
-                new EntityNotFoundException(String.format("Вещь с id = %s не найдена!", itemDto.getId())));
+        Item oldItem = checkItem(itemDto.getId());
         if (oldItem.getOwner().getId() == userId) {
             if (itemDto.getName() != null && !(itemDto.getName().trim().isEmpty())) {
                 oldItem.setName(itemDto.getName());
@@ -55,44 +58,78 @@ public class ItemServiceImpl implements ItemService {
             }
         } else {
             throw new EntityNotFoundException(String.format("Пользователь с id %s не является владельцем " +
-                    "данной вещи!", userId));
+                    "вещи id %s!", userId, itemDto.getId()));
         }
         return ItemMapper.toItemDto(itemStorage.save(oldItem));
     }
 
     @Override
-    public ItemDto findById(long itemId) {
-        return ItemMapper.toItemDto(itemStorage.findById(itemId).orElseThrow(() ->
-                new EntityNotFoundException(String.format("Вещь с id = %s не найдена!", itemId))));
+    public ItemResponseDto findById(long itemId, long userId) {
+        checkUser(userId);
+        Item item = checkItem(itemId);
+        return getItemResponseDto(item, userId);
     }
 
+
+    @Transactional(readOnly = true)
     @Override
-    public List<ItemDto> getAll(long userId) {
+    public List<ItemResponseDto> getAllItemsByOwner(long userId) {
         checkUser(userId);
-        return ItemMapper.toItemDtoList(itemStorage.findItemsByOwnerId(userId));
+        List<Item> itemList = itemStorage.findItemsByOwnerId(userId);
+        List<ItemResponseDto> itemDtoResponseList = new ArrayList<>();
+        for (Item item : itemList) {
+            ItemResponseDto itemResponseDto = getItemResponseDto(item, userId);
+            itemDtoResponseList.add(itemResponseDto);
+        }
+        return itemDtoResponseList;
     }
 
     @Override
     public List<ItemDto> searchItemsByText(String text) {
-        return ItemMapper.toItemDtoList(itemStorage.searchItemsByText(text));
+        return itemStorage.searchItemsByText(text).stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional
     @Override
     public CommentDto addComment(CommentDto commentDto, long userId, long itemId) {
-        User user = userStorage.findById(userId).orElseThrow(() ->
-                new EntityNotFoundException("Пользователь с таким id не найден!"));
-        Item item = itemStorage.findById(itemId).orElseThrow(() ->
-                new EntityNotFoundException("Вещь с таким id не найдена!"));
-        LocalDateTime now = LocalDateTime.now();
-        Booking booking = bookingStorage.findAllByBookerIdAAndItemId(userId, itemId, now).stream()
-                .findFirst().orElseThrow(() -> new BookingStateException("Запрос на бронирование не найден!"));
-        if (booking != null) {
-            return CommentMapper.toCommentDto(commentStorage.save(new Comment(commentDto.getId(),
-                    commentDto.getText(), item, user, LocalDateTime.now())));
-        } else {
-            throw new RuntimeException("Пользователь с id " + " не брал вещь с id" + " в аренду!");
+        User user = checkUser(userId);
+        Item item = checkItem(itemId);
+        checkCommentAuthor(userId, itemId);
+        if (commentDto.getText().isBlank()) {
+            throw new ValidationException("Пустой отзыв! Должен быть текст!");
         }
+        Comment comment = new Comment(commentDto.getId(),
+                commentDto.getText(), item, user, LocalDateTime.now());
+        return CommentMapper.toCommentDto(commentStorage.save(comment));
+    }
+
+    private ItemResponseDto getItemResponseDto(Item item, long userId) {
+        List<Booking> bookingList;
+        LocalDateTime now = LocalDateTime.now();
+        Booking lastBooking;
+        Booking nextBooking;
+        bookingList = bookingStorage.findAllByItemsId(item.getId());
+        List<CommentDto> comments = commentStorage.findCommentsByItemId(item.getId()).stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList());
+        if (bookingList.isEmpty()) {
+            return new ItemResponseDto(item.getId(),
+                    item.getName(),
+                    item.getDescription(),
+                    item.getAvailable(),
+                    null,
+                    null,
+                    comments);
+        } else {
+            lastBooking = bookingStorage.findLastBookingByItemId(item.getId(), userId, now)
+                    .stream().findFirst().orElse(null);
+            nextBooking = bookingStorage.findNextBookingByItemId(item.getId(), userId, now)
+                    .stream().findFirst().orElse(null);
+            return ItemMapper.toItemResponseDto(item, lastBooking, nextBooking, comments);
+        }
+     //   return ItemMapper.toItemResponseDto(item, lastBooking, nextBooking, comments);
     }
 
     private User checkUser(long userId) {
@@ -100,27 +137,32 @@ public class ItemServiceImpl implements ItemService {
                 new EntityNotFoundException(String.format("Пользователь с id = %d не найден!", userId)));
     }
 
-    private void checkItemDtoFields(ItemDto itemDto) {
-        String errorMessage = null;
+    private Item checkItem(long itemId) {
+        return itemStorage.findById(itemId).orElseThrow(() ->
+                new EntityNotFoundException(String.format("Вещь с id = %s не найдена!", itemId)));
+    }
+
+    private void checkItemDto(ItemDto itemDto) {
+        String error = null;
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            errorMessage = "Item can't be without name!";
+            error = "У вещи должно быть название!";
         }
         if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            errorMessage = "Item can't be without description!";
+            error = "У вещи должно быть описание!";
         }
         if (itemDto.getAvailable() == null) {
-            errorMessage = "Item can't be without available status!";
+            error = "Отсутствует статус доступности вещи для аренды!";
         }
 
-        if (errorMessage != null) {
-            throw new ValidationException(errorMessage);
+        if (error != null) {
+            throw new ValidationException(error);
         }
     }
 
     private void checkCommentAuthor(long userId, long itemId) {
-        if (!bookingStorage.existsByItem_IdAndBooker_IdAndEndBefore(itemId, userId, LocalDateTime.now())) {
+        if (!bookingStorage.findAllByBookerIdAAndItemId(itemId, userId, LocalDateTime.now())) {
             throw new ValidationException(
-                    String.format("User id=%d hasn't booking item id=%d or booking isn't finished yet!", userId, itemId)
+                    String.format("Пользователь id=%d не арендовал вещь id=%d или аренда не завершена!", userId, itemId)
             );
         }
     }
