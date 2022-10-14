@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
@@ -16,6 +17,8 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.requests.model.ItemRequest;
+import ru.practicum.shareit.requests.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -32,13 +35,19 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Transactional
     @Override
     public ItemDto add(long userId, ItemDto itemDto) {
         User user = checkUser(userId);
         checkItemDto(itemDto);
-        return ItemMapper.toItemDto(itemRepository.save(ItemMapper.toItem(itemDto, user, null)));
+        ItemRequest request = null;
+        if (itemDto.getRequestId() != null) {
+            request = itemRequestRepository.findById(itemDto.getRequestId()).orElseThrow(() ->
+                    new EntityNotFoundException(String.format("Запрос с id = %d не найден!", itemDto.getRequestId())));
+        }
+        return ItemMapper.toItemDto(itemRepository.save(ItemMapper.toItem(itemDto, user, request)));
     }
 
     @Transactional
@@ -73,9 +82,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemResponseDto> getAllItemsByOwner(long userId) {
+    public List<ItemResponseDto> getAllItemsByOwner(long userId, Pageable pageRequest) {
         checkUser(userId);
-        List<Item> itemList = itemRepository.findItemsByOwnerId(userId);
+        List<Item> itemList = itemRepository.findItemsByOwnerId(userId, pageRequest);
         List<ItemResponseDto> itemDtoResponseList = new ArrayList<>();
         for (Item item : itemList) {
             ItemResponseDto itemResponseDto = getItemResponseDto(item, userId);
@@ -85,8 +94,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItemsByText(String text) {
-        return itemRepository.searchItemsByText(text).stream()
+    public List<ItemDto> searchItemsByText(String text, Pageable pageRequest) {
+        return itemRepository.searchItemsByText(text, pageRequest).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
