@@ -9,14 +9,14 @@ import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.storage.BookingStorage;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BookingStateException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,9 +26,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-    private final BookingStorage bookingStorage;
-    private final UserStorage userStorage;
-    private final ItemStorage itemStorage;
+    private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
 
     @Transactional
     @Override
@@ -40,7 +40,7 @@ public class BookingServiceImpl implements BookingService {
         checkItemAvailable(item);
         Booking booking = new Booking(0, bookingRequestDto.getStart(), bookingRequestDto.getEnd(),
                 item, booker, BookingStatus.WAITING);
-        return BookingMapper.toBookingResponseDto(bookingStorage.save(booking));
+        return BookingMapper.toBookingResponseDto(bookingRepository.save(booking));
     }
 
     @Transactional
@@ -52,7 +52,7 @@ public class BookingServiceImpl implements BookingService {
         Item item = booking.getItem();
         checkAccessForApprove(userId, item);
         booking.setStatus(approve ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        return BookingMapper.toBookingResponseDto(bookingStorage.save(booking));
+        return BookingMapper.toBookingResponseDto(bookingRepository.save(booking));
     }
 
     @Transactional(readOnly = true)
@@ -73,33 +73,33 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case CURRENT:
-                return bookingStorage
+                return bookingRepository
                         .findAllByBookerIdAndStartIsBeforeAndEndIsAfterOrderByStartDesc(userId, now, now)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case PAST:
-                return bookingStorage.findAllByBookerIdAndEndIsBeforeOrderByStartDesc(userId, now)
+                return bookingRepository.findAllByBookerIdAndEndIsBeforeOrderByStartDesc(userId, now)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case FUTURE:
-                return bookingStorage.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now)
+                return bookingRepository.findAllByBookerIdAndStartIsAfterOrderByStartDesc(userId, now)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case WAITING:
-                return bookingStorage.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING)
+                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.WAITING)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case REJECTED:
-                return bookingStorage.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED)
+                return bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(userId, BookingStatus.REJECTED)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             default:
-                return bookingStorage.findAllByBookerIdOrderByStartDesc(userId).stream()
+                return bookingRepository.findAllByBookerIdOrderByStartDesc(userId).stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());        }
     }
@@ -111,32 +111,32 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case CURRENT:
-                return bookingStorage.findAllCurrentByItemsOwnerId(ownerId, now, now)
+                return bookingRepository.findAllCurrentByItemsOwnerId(ownerId, now, now)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case PAST:
-                return bookingStorage.findAllPastByItemsOwnerId(ownerId, now)
+                return bookingRepository.findAllPastByItemsOwnerId(ownerId, now)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case FUTURE:
-                return bookingStorage.findAllFutureByItemsOwnerId(ownerId, now)
+                return bookingRepository.findAllFutureByItemsOwnerId(ownerId, now)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case WAITING:
-                return bookingStorage.findAllStatusByItemsOwnerId(ownerId, BookingStatus.WAITING)
+                return bookingRepository.findAllStatusByItemsOwnerId(ownerId, BookingStatus.WAITING)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             case REJECTED:
-                return bookingStorage.findAllStatusByItemsOwnerId(ownerId, BookingStatus.REJECTED)
+                return bookingRepository.findAllStatusByItemsOwnerId(ownerId, BookingStatus.REJECTED)
                         .stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
             default:
-                return bookingStorage.findAllByItemsOwnerId(ownerId).stream()
+                return bookingRepository.findAllByItemsOwnerId(ownerId).stream()
                         .map(BookingMapper::toBookingResponseDto)
                         .collect(Collectors.toList());
         }
@@ -182,22 +182,22 @@ public class BookingServiceImpl implements BookingService {
     }
 
     public User checkUser(long userId) {
-        return userStorage.findById(userId).orElseThrow(() ->
+        return userRepository.findById(userId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Пользователь с id = %s не найден!", userId)));
     }
 
     public Item checkItem(long itemId) {
-        return itemStorage.findById(itemId).orElseThrow(() ->
+        return itemRepository.findById(itemId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Вещь с id = %s не найдена!", itemId)));
     }
 
     public Booking checkBooking(long bookingId) {
-        return bookingStorage.findById(bookingId).orElseThrow(() ->
+        return bookingRepository.findById(bookingId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Бронирование с id = %s не найдено!", bookingId)));
     }
 
     public void checkUserExist(long userId) {
-        if (!userStorage.existsById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new EntityNotFoundException(String.format("Пользователь с id = %s не найден!", userId));
         }
     }
