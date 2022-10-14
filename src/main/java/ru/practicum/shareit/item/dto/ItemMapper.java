@@ -2,13 +2,14 @@ package ru.practicum.shareit.item.dto;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.requests.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
@@ -18,7 +19,7 @@ public class ItemMapper {
                 item.getName(),
                 item.getDescription(),
                 item.getAvailable(),
-                item.getRequest() != null ? item.getRequest().getId() : null
+                item.getItemRequest() != null ? item.getItemRequest().getId() : null
         );
     }
 
@@ -33,7 +34,15 @@ public class ItemMapper {
         );
     }
 
-    public static List<ItemDto> toItemDtoList(List<Item> items) {
-        return items.stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+    public static ItemResponseDto toItemResponseDto(Item item, Booking lastBooking, Booking nextBooking,
+                                                    List<CommentDto> comments) {
+        return new ItemResponseDto(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getAvailable(),
+                lastBooking != null ? BookingMapper.toBookingItemDto(lastBooking) : null,
+                nextBooking != null ? BookingMapper.toBookingItemDto(nextBooking) : null,
+                comments);
     }
 }

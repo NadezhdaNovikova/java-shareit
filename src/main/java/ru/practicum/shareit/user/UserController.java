@@ -11,10 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.shareit.Create;
-import ru.practicum.shareit.Update;
+import ru.practicum.shareit.common.Create;
+import ru.practicum.shareit.common.Update;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -34,7 +33,7 @@ public class UserController {
 
     @PostMapping()
     public UserDto add(@Validated({Create.class}) @RequestBody UserDto userDto) {
-        UserDto user = userService.add(UserMapper.toUser(userDto));
+        UserDto user = userService.add(userDto);
         log.info("Добавлен новый пользователь {}, id {}, email {}", user.getName(), user.getId(), user.getEmail());
         return user;
     }
@@ -43,7 +42,7 @@ public class UserController {
     public UserDto update(@PathVariable long userId,
                           @Validated({Update.class}) @RequestBody UserDto userDto) {
         userDto.setId(userId);
-        UserDto user = userService.update(UserMapper.toUser(userDto));
+        UserDto user = userService.update(userDto);
         log.info("Пользователь {}, id {}, email {} обновлен", user.getName(), user.getId(), user.getEmail());
         return user;
     }
