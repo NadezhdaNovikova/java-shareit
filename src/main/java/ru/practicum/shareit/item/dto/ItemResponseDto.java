@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ItemResponseDto extends ItemDto {
-    private long id;
+    private Long id;
     private String name;
     private String description;
     private Boolean available;

@@ -26,7 +26,7 @@ public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "request_id", nullable = false)
-    private long id;
+    private Long id;
 
     @NotBlank
     @Column(nullable = false)

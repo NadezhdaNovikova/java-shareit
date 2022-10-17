@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class CommentDto {
-    private long id;
+    private Long id;
 
     @NotBlank(groups = {Create.class})
     private String text;
 
     private String authorName;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH.mm.ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created;
 }

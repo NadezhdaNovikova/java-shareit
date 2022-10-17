@@ -12,7 +12,7 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 public class UserDto {
 
-    private long id;
+    private Long id;
     @NotBlank(groups = {Create.class}, message = "Имя должно быть указано!")
     private String name;
     @NotBlank(groups = {Create.class}, message = "Email должен быть указан!")
