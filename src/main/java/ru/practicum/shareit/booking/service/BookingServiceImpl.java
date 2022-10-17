@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,7 +109,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingResponseDto> getByOwner(long ownerId, BookingState state, PageRequest pageRequest) {
+    public List<BookingResponseDto> getByOwner(long ownerId, BookingState state, Pageable pageRequest) {
         checkUserExist(ownerId);
         LocalDateTime now = LocalDateTime.now();
         switch (state) {

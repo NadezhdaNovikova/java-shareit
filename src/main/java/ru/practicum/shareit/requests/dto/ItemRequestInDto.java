@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ItemRequestInDto {
 
-    private long id;
+    private Long id;
 
     @NotBlank(groups = {Create.class})
     private String description;

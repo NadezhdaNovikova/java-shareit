@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ItemRequestOutDto {
 
-    private long id;
+    private Long id;
     private String description;
     private LocalDateTime created;
     private List<ItemDto> items;

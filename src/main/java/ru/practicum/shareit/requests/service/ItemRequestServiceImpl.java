@@ -1,7 +1,7 @@
 package ru.practicum.shareit.requests.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EntityNotFoundException;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ItemRequestServiceImpl implements ItemRequestService{
+public class ItemRequestServiceImpl implements ItemRequestService {
 
     private final ItemRequestRepository itemRequestRepository;
     private final ItemRepository itemRepository;
@@ -44,7 +44,7 @@ public class ItemRequestServiceImpl implements ItemRequestService{
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemRequestOutDto> getAll(long userId, PageRequest pageRequest) {
+    public List<ItemRequestOutDto> getAll(long userId, Pageable pageRequest) {
         checkUserExist(userId);
         List<ItemRequest> requests = itemRequestRepository.findAllByOtherUsers(userId, pageRequest);
         return toListRequestOutDto(requests);
@@ -55,7 +55,7 @@ public class ItemRequestServiceImpl implements ItemRequestService{
     public ItemRequestOutDto getById(long userId, long requestId) {
         checkUserExist(userId);
         ItemRequest itemRequest = itemRequestRepository.findById(requestId).orElseThrow(() ->
-                new EntityNotFoundException(String.format("Запрос с id = %s не найдена!", requestId)));
+                new EntityNotFoundException(String.format("Запрос с id = %s не найден!", requestId)));
         return ItemRequestMapper.toItemRequestOutDto(itemRequest,
                 itemRepository.findAllByRequestId(itemRequest.getId()));
     }
@@ -69,6 +69,7 @@ public class ItemRequestServiceImpl implements ItemRequestService{
                 .collect(Collectors.toList());
         return requestsOut;
     }
+
     public User checkUser(long userId) {
         return userRepository.findById(userId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Пользователь с id = %s не найден!", userId)));
