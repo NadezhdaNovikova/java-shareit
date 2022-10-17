@@ -13,12 +13,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.shareit.common.Create;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
-import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.exception.BookingStateException;
+import ru.practicum.shareit.common.Create;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -65,14 +63,9 @@ public class BookingController {
                                                   Integer from,
                                               @Positive @RequestParam(name = "size", defaultValue = "10")
                                                   Integer size) {
-        BookingState stateIn;
         int page = from / size;
-        try {
-            stateIn = BookingState.valueOf(state);
-        } catch (IllegalArgumentException e) {
-            throw new BookingStateException(state);
-        }
-        return bookingService.getByUser(userId, stateIn, PageRequest.of(page, size));
+
+        return bookingService.getByUser(userId, state, PageRequest.of(page, size));
     }
 
     @GetMapping("/owner")
@@ -82,13 +75,8 @@ public class BookingController {
                                                    Integer from,
                                                @Positive @RequestParam(name = "size", defaultValue = "10")
                                                    Integer size)  {
-        BookingState stateIn;
         int page = from / size;
-        try {
-            stateIn = BookingState.valueOf(state);
-        } catch (IllegalArgumentException e) {
-            throw new BookingStateException(state);
-        }
-        return bookingService.getByOwner(userId, stateIn, PageRequest.of(page, size));
+
+        return bookingService.getByOwner(userId, state, PageRequest.of(page, size));
     }
 }

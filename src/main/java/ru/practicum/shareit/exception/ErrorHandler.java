@@ -54,6 +54,6 @@ public class ErrorHandler {
     public ErrorResponse handleBookingStateException(final BookingStateException e) {
         log.info("BookingStateException. Произошла ошибка {}, статус ошибки {}", e.getMessage(),
                 HttpStatus.BAD_REQUEST);
-        return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS", e.getMessage());
+        return new ErrorResponse(e.getMessage());
     }
 }

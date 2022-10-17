@@ -7,7 +7,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
-import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -156,7 +155,7 @@ class BookingServiceImplTest {
         when(bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(anyLong(), any(), any()))
                 .thenReturn(List.of(booking));
 
-        List<BookingResponseDto> bookings = bookingService.getByUser(user.getId(), BookingState.valueOf("ALL"),
+        List<BookingResponseDto> bookings = bookingService.getByUser(user.getId(), "ALL",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -165,7 +164,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByUser(user.getId(), BookingState.valueOf("CURRENT"),
+        bookings = bookingService.getByUser(user.getId(), "CURRENT",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -174,7 +173,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByUser(user.getId(), BookingState.valueOf("PAST"),
+        bookings = bookingService.getByUser(user.getId(), "PAST",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -183,7 +182,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByUser(user.getId(), BookingState.valueOf("FUTURE"),
+        bookings = bookingService.getByUser(user.getId(), "FUTURE",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -192,7 +191,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByUser(user.getId(), BookingState.valueOf("WAITING"),
+        bookings = bookingService.getByUser(user.getId(), "WAITING",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -201,7 +200,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByUser(user.getId(), BookingState.valueOf("REJECTED"),
+        bookings = bookingService.getByUser(user.getId(), "REJECTED",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -209,6 +208,10 @@ class BookingServiceImplTest {
         assertEquals(booking.getBooker().getId(), bookings.get(0).getBooker().getId());
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
+
+        BookingStateException exception = assertThrows(BookingStateException.class, () ->
+                bookingService.getByUser(user.getId(), "UNSUPPORTED_STATUS", Pageable.ofSize(10)));
+        assertEquals("Unknown state: UNSUPPORTED_STATUS", exception.getMessage());
     }
 
     @Test
@@ -224,7 +227,7 @@ class BookingServiceImplTest {
         when(bookingRepository.findAllStatusByItemsOwnerId(anyLong(), any(), any()))
                 .thenReturn(List.of(booking));
 
-        List<BookingResponseDto> bookings = bookingService.getByOwner(user2.getId(), BookingState.valueOf("ALL"),
+        List<BookingResponseDto> bookings = bookingService.getByOwner(user2.getId(), "ALL",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -233,7 +236,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByOwner(user2.getId(), BookingState.valueOf("CURRENT"),
+        bookings = bookingService.getByOwner(user2.getId(), "CURRENT",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -242,7 +245,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByOwner(user2.getId(), BookingState.valueOf("PAST"),
+        bookings = bookingService.getByOwner(user2.getId(), "PAST",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -251,7 +254,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByOwner(user2.getId(), BookingState.valueOf("FUTURE"),
+        bookings = bookingService.getByOwner(user2.getId(), "FUTURE",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -260,7 +263,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByOwner(user2.getId(), BookingState.valueOf("WAITING"),
+        bookings = bookingService.getByOwner(user2.getId(), "WAITING",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -269,7 +272,7 @@ class BookingServiceImplTest {
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
 
-        bookings = bookingService.getByOwner(user2.getId(), BookingState.valueOf("REJECTED"),
+        bookings = bookingService.getByOwner(user2.getId(), "REJECTED",
                 Pageable.ofSize(10));
         assertNotNull(bookings);
         assertEquals(1, bookings.size());
@@ -277,6 +280,10 @@ class BookingServiceImplTest {
         assertEquals(booking.getBooker().getId(), bookings.get(0).getBooker().getId());
         assertEquals(booking.getItem().getId(), bookings.get(0).getItem().getId());
         assertEquals(booking.getStatus(), bookings.get(0).getStatus());
+
+        BookingStateException exception = assertThrows(BookingStateException.class, () ->
+                bookingService.getByOwner(user.getId(), "UNSUPPORTED_STATUS", Pageable.ofSize(10)));
+        assertEquals("Unknown state: UNSUPPORTED_STATUS", exception.getMessage());
     }
 
     @Test

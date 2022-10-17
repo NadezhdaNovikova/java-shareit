@@ -68,8 +68,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingResponseDto> getByUser(long userId, BookingState state, Pageable pageRequest) {
+    public List<BookingResponseDto> getByUser(long userId, String stateIn, Pageable pageRequest) {
         checkUserExist(userId);
+        BookingState state;
+        try {
+            state = BookingState.valueOf(stateIn);
+        } catch (IllegalArgumentException e) {
+            throw new BookingStateException("Unknown state: " + stateIn);
+        }
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case CURRENT:
@@ -109,8 +115,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<BookingResponseDto> getByOwner(long ownerId, BookingState state, Pageable pageRequest) {
+    public List<BookingResponseDto> getByOwner(long ownerId, String stateIn, Pageable pageRequest) {
         checkUserExist(ownerId);
+        BookingState state;
+        try {
+            state = BookingState.valueOf(stateIn);
+        } catch (IllegalArgumentException e) {
+            throw new BookingStateException("Unknown state: " + stateIn);
+        }
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case CURRENT:
