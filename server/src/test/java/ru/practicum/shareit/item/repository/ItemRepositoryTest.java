@@ -43,7 +43,7 @@ class ItemRepositoryTest {
 
     @Test
     void findItemsByOwnerId() {
-        List<Item> items = itemRepository.findItemsByOwnerId(user1.getId(), PageRequest.ofSize(10));
+        List<Item> items = itemRepository.findItemsByOwnerIdOrderById(user1.getId(), PageRequest.ofSize(10));
         assertNotNull(items);
         assertEquals(1, items.size());
         assertEquals(item1.getId(), items.get(0).getId().intValue());

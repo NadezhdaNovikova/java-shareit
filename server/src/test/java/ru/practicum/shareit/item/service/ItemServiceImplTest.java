@@ -139,7 +139,7 @@ class ItemServiceImplTest {
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(userRepository.save(any())).thenReturn(user);
-        when(itemRepository.findItemsByOwnerId(1L, Pageable.ofSize(15)))
+        when(itemRepository.findItemsByOwnerIdOrderById(1L, Pageable.ofSize(15)))
                 .thenReturn(Collections.singletonList(item));
         when(bookingRepository.findAllByItemsId(anyLong())).thenReturn(Collections.emptyList());
         when(commentRepository.findCommentsByItemId(anyLong())).thenReturn(Collections.emptyList());
