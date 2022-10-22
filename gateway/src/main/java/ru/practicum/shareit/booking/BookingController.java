@@ -44,11 +44,10 @@ public class BookingController {
 	}
 
 	@PatchMapping("{bookingId}")
-	public ResponseEntity<Object>  approve(@RequestHeader(HEADER_USER_ID) long userId,
-									   @PathVariable long bookingId,
-									   @RequestParam("approved") boolean isApproved) {
-		log.info("Обновление статуса запроса с id {}", bookingId);
-		return bookingClient.approve(userId, bookingId, isApproved);
+	public ResponseEntity<Object>  approveBooking(@RequestHeader("X-Sharer-User-Id") long userId,
+												  @PathVariable long bookingId,
+												  @RequestParam("approved") boolean isApproved) {
+		return bookingClient.approveBooking(userId, bookingId, isApproved);
 	}
 
 	@GetMapping("{bookingId}")

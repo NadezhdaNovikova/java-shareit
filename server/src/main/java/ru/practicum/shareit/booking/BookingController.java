@@ -36,15 +36,15 @@ public class BookingController {
     }
 
     @PatchMapping("{bookingId}")
-    public BookingResponseDto  approve(@RequestHeader(HEADER_USER_ID) long userId,
-                             @PathVariable long bookingId,
-                             @RequestParam("approved") boolean isApproved) {
+    public BookingResponseDto approve(@RequestHeader("X-Sharer-User-Id") long userId,
+                                      @PathVariable long bookingId,
+                                      @RequestParam("approved") boolean isApproved) {
         return bookingService.approve(userId, bookingId, isApproved);
     }
 
     @GetMapping("{bookingId}")
-    public BookingResponseDto  getById(@RequestHeader(HEADER_USER_ID) long userId,
-                                  @PathVariable long bookingId) {
+    public BookingResponseDto getById(@RequestHeader(HEADER_USER_ID) long userId,
+                                      @PathVariable long bookingId) {
         return bookingService.getById(userId, bookingId);
     }
 
@@ -52,9 +52,9 @@ public class BookingController {
     public List<BookingResponseDto> getByUser(@RequestHeader(HEADER_USER_ID) long userId,
                                               @RequestParam(value = "state", defaultValue = "ALL") String state,
                                               @RequestParam(name = "from", defaultValue = "0")
-                                                  Integer from,
+                                              Integer from,
                                               @RequestParam(name = "size", defaultValue = "10")
-                                                  Integer size) {
+                                              Integer size) {
         int page = from / size;
 
         return bookingService.getByUser(userId, state, PageRequest.of(page, size));
@@ -64,9 +64,9 @@ public class BookingController {
     public List<BookingResponseDto> getByOwner(@RequestHeader(HEADER_USER_ID) long userId,
                                                @RequestParam(value = "state", defaultValue = "ALL") String state,
                                                @RequestParam(name = "from", defaultValue = "0")
-                                                   Integer from,
+                                               Integer from,
                                                @RequestParam(name = "size", defaultValue = "10")
-                                                   Integer size)  {
+                                               Integer size) {
         int page = from / size;
 
         return bookingService.getByOwner(userId, state, PageRequest.of(page, size));

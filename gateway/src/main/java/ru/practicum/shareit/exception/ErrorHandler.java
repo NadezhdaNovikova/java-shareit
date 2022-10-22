@@ -38,8 +38,8 @@ public class ErrorHandler {
     @ExceptionHandler
     public ResponseEntity<String> handleThrowable(final Throwable e) {
         log.info("Throwable. Произошла ошибка {}, статус ошибки {}", e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>("Произошла непредвиденная ошибка.", HttpStatus.INTERNAL_SERVER_ERROR);
+                HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("Произошла непредвиденная ошибка.", HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler

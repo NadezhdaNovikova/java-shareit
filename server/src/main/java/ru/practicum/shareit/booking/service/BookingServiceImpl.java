@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,13 +46,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     @Override
-    public BookingResponseDto approve(long userId, long bookingId, boolean approve) {
+    public BookingResponseDto approve(long userId, long bookingId, boolean isApproved) throws ConstraintViolationException {
+        Booking booking;
+        Item item;
         checkUserExist(userId);
-        Booking booking = checkBooking(bookingId);
-        checkBookingStatus(booking);
-        Item item = booking.getItem();
+        booking = checkBooking(bookingId);
+        checkBookingStatus(booking, isApproved);
+        item = booking.getItem();
         checkAccessForApprove(userId, item);
-        booking.setStatus(approve ? BookingStatus.APPROVED : BookingStatus.REJECTED);
+        booking.setStatus(isApproved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         return BookingMapper.toBookingResponseDto(bookingRepository.save(booking));
     }
 
@@ -158,10 +161,14 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private void checkBookingStatus(Booking booking) {
+    private void checkBookingStatus(Booking booking, boolean isApproved) {
         if (booking.getStatus() != BookingStatus.WAITING) {
             throw new BookingStateException(String.format("Бронирование id=%d уже находится в статусе %S!",
                     booking.getId(), booking.getStatus()));
+        }
+        if ((booking.getStatus().equals(BookingStatus.APPROVED) && isApproved) ||
+                (booking.getStatus().equals(BookingStatus.REJECTED) && !isApproved)) {
+            throw new BookingStateException("Статус уже установлен!");
         }
     }
 
