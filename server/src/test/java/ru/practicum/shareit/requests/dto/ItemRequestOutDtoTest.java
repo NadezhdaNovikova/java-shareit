@@ -36,7 +36,7 @@ class ItemRequestOutDtoTest {
         var itemRequestOutDto = new ItemRequestOutDto(
                 1L,
                 "comment text",
-                LocalDateTime.of(2022, Month.OCTOBER, 15, 00, 32, 22),
+                LocalDateTime.of(2022, Month.OCTOBER, 15, 0, 32, 22),
                 items);
 
         var res = json.write(itemRequestOutDto);
