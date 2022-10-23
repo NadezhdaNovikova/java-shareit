@@ -1,7 +1,6 @@
 package ru.practicum.shareit.requests.dto;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.requests.model.ItemRequest;
@@ -11,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class ItemRequestMapper {
     public static ItemRequestOutDto toItemRequestOutDto(ItemRequest itemRequest, List<Item> items) {
         return new ItemRequestOutDto(
